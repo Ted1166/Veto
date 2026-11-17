@@ -1,0 +1,9 @@
+{
+  "callbackProxy": "0x476F44b11F5C942c58f4c8E3d0300E5710743585",
+  "chainId": 84532,
+  "decisionWindow": 60,
+  "escalatedWindow": 15,
+  "guard": "0x5b3aA1be08C5E5E69c888eEb1E7a906475f062E6",
+  "reactive": "0xEF650672437A97A7b987984239064D502F56272d",
+  "vault": "0x82cad1A1A22Cce5A4e656c74723C9f0828EE9c0b"
+}

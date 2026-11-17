@@ -1,0 +1,8 @@
+{
+  "chainId": 84532,
+  "deployer": "0x2ec236a1e06715712749BCA3c7D242c3b9caE6D7",
+  "pool": "0xaB23398345f30d558e92a67cCA1f8f437164ab45",
+  "riskToken": "0x5E9fD314EA0Bcf97A168A82c4d31cb99E72bd1dF",
+  "stableToken": "0x2e0eAd020EDcA2bFcbbD1f4498d7ae19429A9d8b",
+  "vault": "0xC9485Ae2bdCA5d583f621ECa07aa742093eC9882"
+}
