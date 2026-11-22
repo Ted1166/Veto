@@ -32,6 +32,8 @@ contract DeployFixtures is Script {
 
         vm.stopBroadcast();
 
+        vm.createDir("./deployments", true);
+
         string memory key = "fixtures";
         vm.serializeUint(key, "chainId", block.chainid);
         vm.serializeAddress(key, "deployer", deployer);
@@ -43,7 +45,7 @@ contract DeployFixtures is Script {
 
         console2.log("riskToken ", address(risk));
         console2.log("stableToken", address(stable));
-        console2.log("pool      ", address(pool));
-        console2.log("vault     ", address(vault));
+        console2.log("pool", address(pool));
+        console2.log("vault", address(vault));
     }
 }

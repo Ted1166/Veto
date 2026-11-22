@@ -7,8 +7,10 @@ import {HeadsUpGuard} from "../src/HeadsUpGuard.sol";
 import {PositionVault} from "../src/fixtures/PositionVault.sol";
 
 contract DeployGuard is Script {
-    address private constant BASE_SEPOLIA_PROXY = 0x476F44b11F5C942c58f4c8E3d0300E5710743585;
-    address private constant UNICHAIN_SEPOLIA_PROXY = 0x775c9B990ADe401060B78D0e98684eEf8d2466C1;
+    address private constant BASE_SEPOLIA_PROXY =
+        0x476F44b11F5C942c58f4c8E3d0300E5710743585;
+    address private constant UNICHAIN_SEPOLIA_PROXY =
+        0x775c9B990ADe401060B78D0e98684eEf8d2466C1;
 
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
@@ -44,6 +46,8 @@ contract DeployGuard is Script {
         );
         vault.setGuard(address(guard));
         vm.stopBroadcast();
+
+        vm.createDir("./deployments", true);
 
         string memory key = "guard";
         vm.serializeUint(key, "chainId", block.chainid);

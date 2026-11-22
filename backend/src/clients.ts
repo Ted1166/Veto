@@ -19,7 +19,7 @@ export function createContext() {
         rpcUrls: { default: { http: [settings.reactiveRpc] } }
     })
 
-    const transport = (url: string) => http(url, { retryCount: 3, retryDelay: 400, timeout: 20_000 })
+    const transport = (url: string) => http(url, { retryCount: 6, retryDelay: 500, timeout: 20_000 })
 
     const origin = createPublicClient({ chain: originChain, transport: transport(settings.originRpc) })
     const reactive = createPublicClient({
@@ -32,7 +32,25 @@ export function createContext() {
         ? createWalletClient({ account, chain: originChain, transport: transport(settings.originRpc) })
         : undefined
 
-    return { settings, deployment, originChain, reactiveChain, origin, reactive, account, wallet }
+    const reactiveWallet = account
+        ? createWalletClient({
+            account,
+            chain: reactiveChain,
+            transport: transport(settings.reactiveRpc)
+        })
+        : undefined
+
+    return {
+        settings,
+        deployment,
+        originChain,
+        reactiveChain,
+        origin,
+        reactive,
+        account,
+        wallet,
+        reactiveWallet
+    }
 }
 
 export type Context = ReturnType<typeof createContext>
@@ -42,4 +60,11 @@ export function requireWallet(ctx: Context) {
         throw new Error('PRIVATE_KEY is required for this command')
     }
     return { wallet: ctx.wallet, account: ctx.account }
+}
+
+export function requireReactiveWallet(ctx: Context) {
+    if (!ctx.reactiveWallet || !ctx.account) {
+        throw new Error('PRIVATE_KEY is required for this command')
+    }
+    return { wallet: ctx.reactiveWallet, account: ctx.account }
 }

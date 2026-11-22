@@ -32,7 +32,7 @@ anvil --chain-id 5318008 -p "$b_port" --silent &
 pids+=($!)
 sleep 2
 
-mkdir -p "$work/contracts" "$work/data"
+mkdir -p "$work/contracts/deployments" "$work/data"
 (cd "$root/contracts" && tar --exclude=./lib --exclude=./out --exclude=./cache --exclude=./broadcast --exclude=./deployments --exclude=./.env -cf - .) | (cd "$work/contracts" && tar -xf -)
 ln -s "$root/contracts/lib" "$work/contracts/lib"
 
@@ -51,7 +51,7 @@ COOLDOWN=10
 REQUEST_TIMEOUT=8
 TICK_INTERVAL=1
 GUARD_FUNDING=10000000000000000
-REACTIVE_FUNDING=100000000000000000
+REACTIVE_FUNDING=5000000000000000000
 ENV
 
 echo "deploying to local chains"

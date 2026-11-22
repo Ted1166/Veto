@@ -5,6 +5,7 @@ import { type Trace, toMarkdown } from './latency.js'
 
 const tracesFile = () => resolve(paths.data, 'traces.json')
 const markdownFile = () => resolve(paths.data, 'latency.md')
+const submissionFile = () => resolve(paths.data, 'submission.md')
 
 export function readTraces(): Trace[] {
     if (!existsSync(tracesFile())) return []
@@ -24,4 +25,10 @@ export function appendTrace(trace: Trace): Trace[] {
 
 export function markdownPath(): string {
     return markdownFile()
+}
+
+export function writeSubmission(markdown: string): string {
+    mkdirSync(paths.data, { recursive: true })
+    writeFileSync(submissionFile(), markdown)
+    return submissionFile()
 }

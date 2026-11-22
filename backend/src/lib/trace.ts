@@ -1,6 +1,14 @@
 import { parseAbiItem } from 'viem'
 import { statusName, triggerName } from '../abi.js'
 import type { Context } from '../clients.js'
+import {
+    type BlockSource,
+    chunkRanges,
+    firstBlockAtOrAfter,
+    lastBlockAtOrBefore,
+    logRange,
+    memoize
+} from './blocks.js'
 import { readAction } from './chain.js'
 import type { Trace, TxPoint } from './latency.js'
 import { priceOf } from './market.js'
@@ -16,22 +24,30 @@ const directiveEvent = parseAbiItem(
     'event DirectiveSent(uint8 indexed directive, uint256 indexed actionId, uint256 price)'
 )
 
-const CHUNK = 2_000n
+type Client = Context['origin'] | Context['reactive']
 
-async function pointFor(
-    client: Context['origin'] | Context['reactive'],
-    hash: `0x${string}`,
-    blockNumber: bigint
-): Promise<TxPoint> {
+function sourceFor(client: Client): BlockSource {
+    return memoize({
+        async latest() {
+            const block = await client.getBlock({ blockTag: 'latest' })
+            return { number: block.number, timestamp: Number(block.timestamp) }
+        },
+        async at(number) {
+            const block = await client.getBlock({ blockNumber: number })
+            return { timestamp: Number(block.timestamp) }
+        }
+    })
+}
+
+async function pointFor(client: Client, hash: `0x${string}`, blockNumber: bigint): Promise<TxPoint> {
     const block = await client.getBlock({ blockNumber })
     return { hash, block: Number(blockNumber), timestamp: Number(block.timestamp) }
 }
 
-async function findOpened(ctx: Context, id: number, lookback: bigint) {
-    const latest = await ctx.origin.getBlockNumber()
-    const floor = latest > lookback ? latest - lookback : 0n
-    for (let end = latest; end >= floor; end -= CHUNK) {
-        const start = end - CHUNK + 1n > floor ? end - CHUNK + 1n : floor
+async function findOpened(ctx: Context, source: BlockSource, id: number, openedAt: number) {
+    const from = await firstBlockAtOrAfter(source, openedAt - 1)
+    const to = await lastBlockAtOrBefore(source, openedAt + 1)
+    for (const [start, end] of chunkRanges(from, to, logRange())) {
         const logs = await ctx.origin.getLogs({
             address: ctx.deployment.guard,
             event: openedEvent,
@@ -39,52 +55,52 @@ async function findOpened(ctx: Context, id: number, lookback: bigint) {
             fromBlock: start,
             toBlock: end
         })
-        const found = logs[0]
-        if (found) return found
-        if (start === floor) break
+        if (logs[0]) return logs[0]
     }
     return undefined
 }
 
-async function findOrigin(ctx: Context, price: bigint, openedBlock: bigint): Promise<TxPoint | undefined> {
-    const from = openedBlock > 600n ? openedBlock - 600n : 0n
-    const logs = await ctx.origin.getLogs({
-        address: ctx.deployment.pool,
-        event: syncEvent,
-        fromBlock: from,
-        toBlock: openedBlock
-    })
-    for (const log of [...logs].reverse()) {
-        const { reserve0, reserve1 } = log.args
-        if (reserve0 === undefined || reserve1 === undefined) continue
-        if (priceOf({ risk: reserve0, stable: reserve1 }) === price) {
-            return pointFor(ctx.origin, log.transactionHash, log.blockNumber)
+async function findOrigin(
+    ctx: Context,
+    source: BlockSource,
+    price: bigint,
+    openedBlock: bigint,
+    openedAt: number
+): Promise<TxPoint | undefined> {
+    const from = await firstBlockAtOrAfter(source, openedAt - 90)
+    for (const [start, end] of chunkRanges(from, openedBlock, logRange(), 'backward')) {
+        const logs = await ctx.origin.getLogs({
+            address: ctx.deployment.pool,
+            event: syncEvent,
+            fromBlock: start,
+            toBlock: end
+        })
+        for (const log of [...logs].reverse()) {
+            const { reserve0, reserve1 } = log.args
+            if (reserve0 === undefined || reserve1 === undefined) continue
+            if (priceOf({ risk: reserve0, stable: reserve1 }) === price) {
+                return pointFor(ctx.origin, log.transactionHash, log.blockNumber)
+            }
         }
     }
     return undefined
 }
 
-async function reactiveWindow(ctx: Context, aroundTimestamp: number, radius: bigint) {
-    const latest = await ctx.reactive.getBlock({ blockTag: 'latest' })
-    const behind = BigInt(Math.max(0, Number(latest.timestamp) - aroundTimestamp))
-    const estimate = latest.number > behind ? latest.number - behind : 0n
-    const from = estimate > radius ? estimate - radius : 0n
-    const to = estimate + radius > latest.number ? latest.number : estimate + radius
-    return { from, to }
-}
-
 async function findReactiveTrigger(
     ctx: Context,
+    source: BlockSource,
     price: bigint,
-    aroundTimestamp: number
+    fromTimestamp: number,
+    toTimestamp: number
 ): Promise<TxPoint | undefined> {
-    for (const radius of [80n, 800n]) {
-        const { from, to } = await reactiveWindow(ctx, aroundTimestamp, radius)
+    const from = await firstBlockAtOrAfter(source, fromTimestamp)
+    const to = await lastBlockAtOrBefore(source, toTimestamp)
+    for (const [start, end] of chunkRanges(from, to, logRange(), 'backward')) {
         const logs = await ctx.reactive.getLogs({
             address: ctx.deployment.reactive,
             event: triggerEvent,
-            fromBlock: from,
-            toBlock: to
+            fromBlock: start,
+            toBlock: end
         })
         const match = [...logs].reverse().find((log) => log.args.price === price)
         if (match) return pointFor(ctx.reactive, match.transactionHash, match.blockNumber)
@@ -94,17 +110,20 @@ async function findReactiveTrigger(
 
 async function findDefaultDirective(
     ctx: Context,
+    source: BlockSource,
     id: number,
-    aroundTimestamp: number
+    deadline: number,
+    resolvedAt: number
 ): Promise<TxPoint | undefined> {
-    for (const radius of [80n, 800n]) {
-        const { from, to } = await reactiveWindow(ctx, aroundTimestamp, radius)
+    const from = await firstBlockAtOrAfter(source, deadline - 2)
+    const to = await lastBlockAtOrBefore(source, resolvedAt + 2)
+    for (const [start, end] of chunkRanges(from, to, logRange())) {
         const logs = await ctx.reactive.getLogs({
             address: ctx.deployment.reactive,
             event: directiveEvent,
             args: { directive: 2, actionId: BigInt(id) },
-            fromBlock: from,
-            toBlock: to
+            fromBlock: start,
+            toBlock: end
         })
         const first = logs[0]
         if (first) return pointFor(ctx.reactive, first.transactionHash, first.blockNumber)
@@ -115,22 +134,40 @@ async function findDefaultDirective(
 export interface TraceOptions {
     scenario?: string
     decision?: TxPoint & { kind: string }
-    lookbackBlocks?: bigint
 }
 
 export async function traceAction(ctx: Context, id: number, options: TraceOptions = {}): Promise<Trace> {
     const action = await readAction(ctx, id)
-    const opened = await findOpened(ctx, id, options.lookbackBlocks ?? 60_000n)
+    const originSource = sourceFor(ctx.origin)
+    const reactiveSource = sourceFor(ctx.reactive)
+    const openedAt = Number(action.openedAt)
 
+    const opened = await findOpened(ctx, originSource, id, openedAt)
     const callback = opened
         ? await pointFor(ctx.origin, opened.transactionHash, opened.blockNumber)
         : undefined
-    const origin = opened ? await findOrigin(ctx, action.triggerPrice, opened.blockNumber) : undefined
-    const reactive = await findReactiveTrigger(ctx, action.triggerPrice, Number(action.openedAt))
+    const origin = opened
+        ? await findOrigin(ctx, originSource, action.triggerPrice, opened.blockNumber, openedAt)
+        : undefined
+
+    const reactive = await findReactiveTrigger(
+        ctx,
+        reactiveSource,
+        action.triggerPrice,
+        (origin?.timestamp ?? openedAt - 90) - 2,
+        openedAt + 2
+    )
+
     const status = statusName(action.status)
     const timeoutDirective =
         status === 'Defaulted'
-            ? await findDefaultDirective(ctx, id, Number(action.resolvedAt))
+            ? await findDefaultDirective(
+                ctx,
+                reactiveSource,
+                id,
+                Number(action.deadline),
+                Number(action.resolvedAt)
+            )
             : undefined
 
     return {
@@ -141,7 +178,7 @@ export async function traceAction(ctx: Context, id: number, options: TraceOption
         executedBps: action.executedBps,
         triggerPrice: action.triggerPrice.toString(),
         decisionWindow: ctx.deployment.decisionWindow,
-        openedAt: Number(action.openedAt),
+        openedAt,
         deadline: Number(action.deadline),
         resolvedAt: Number(action.resolvedAt),
         origin,

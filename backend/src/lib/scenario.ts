@@ -5,6 +5,7 @@ import {
     approveAction,
     latestTimestamp,
     readAction,
+    readDebts,
     readGuardState,
     readPool,
     readReactiveState,
@@ -21,6 +22,43 @@ export const SCENARIOS = ['approve', 'resize', 'veto', 'timeout', 'recover', 'es
 export type ScenarioKind = (typeof SCENARIOS)[number]
 
 export const DEFAULT_SCENARIOS: ScenarioKind[] = ['approve', 'veto', 'timeout', 'recover']
+
+export const COST_ESTIMATE: Record<ScenarioKind, bigint> = {
+    approve: 80_000_000_000_000_000n,
+    resize: 80_000_000_000_000_000n,
+    veto: 80_000_000_000_000_000n,
+    recover: 80_000_000_000_000_000n,
+    timeout: 160_000_000_000_000_000n,
+    escalate: 200_000_000_000_000_000n
+}
+
+export function shortfall(balance: bigint, kinds: ScenarioKind[]): bigint {
+    const needed = kinds.reduce((total, kind) => total + COST_ESTIMATE[kind], 0n)
+    return needed > balance ? needed - balance : 0n
+}
+
+export async function assertReady(ctx: Context, kind: ScenarioKind): Promise<void> {
+    const [balance, debts] = await Promise.all([
+        ctx.reactive.getBalance({ address: ctx.deployment.reactive }),
+        readDebts(ctx)
+    ])
+    if (debts.reactive > 0n) {
+        throw new Error(
+            `The reactive contract owes ${formatPrice(debts.reactive, 4)} and receives nothing while in debt. Fund it, then run: npm run bot -- cover-debt reactive`
+        )
+    }
+    if (debts.guard > 0n) {
+        throw new Error(
+            `The guard owes ${formatPrice(debts.guard, 6)} to the callback proxy. Fund it with npm run bot -- fund-guard 0.001, then run: npm run bot -- cover-debt guard`
+        )
+    }
+    const missing = shortfall(balance, [kind])
+    if (missing > 0n) {
+        throw new Error(
+            `The reactive contract holds ${formatPrice(balance, 4)} and a ${kind} scenario needs about ${formatPrice(COST_ESTIMATE[kind], 2)}. Fund it first: npm run bot -- fund-reactive ${formatPrice(missing + 50_000_000_000_000_000n, 2)}`
+        )
+    }
+}
 
 export interface ScenarioResult {
     trace: Trace
@@ -119,6 +157,7 @@ export async function runScenario(
     kind: ScenarioKind,
     log: Log = console.log
 ): Promise<ScenarioResult> {
+    await assertReady(ctx, kind)
     log(`scenario ${kind}: preparing`)
     await prepare(ctx, log)
 
@@ -156,7 +195,15 @@ export async function runScenario(
         { timeoutMs: (ctx.deployment.decisionWindow + 180) * 1000 }
     )
 
-    const trace = await traceAction(ctx, id, { scenario: kind, decision })
+    let trace: Trace
+    try {
+        trace = await traceAction(ctx, id, { scenario: kind, decision })
+    } catch (error) {
+        const reason = error instanceof Error ? error.message.split('\n')[0] : String(error)
+        throw new Error(
+            `action ${id} ended on chain but the trace failed: ${reason}. Rebuild it without spending anything: npm run trace -- ${id} ${kind}`
+        )
+    }
     const reactiveAfter = await ctx.reactive.getBalance({ address: ctx.deployment.reactive })
     log(`action ${id} ended as ${trace.status}`)
 

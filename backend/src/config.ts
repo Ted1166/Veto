@@ -70,6 +70,7 @@ export interface Deployment {
     vault: Address
     guard: Address
     reactive: Address
+    callbackProxy: Address
     decisionWindow: number
     escalatedWindow: number
 }
@@ -103,6 +104,7 @@ export function loadDeployment(): Deployment {
         vault: address(fixtures, 'vault'),
         guard: address(guard, 'guard'),
         reactive: address(reactive, 'reactive'),
+        callbackProxy: address(guard, 'callbackProxy'),
         decisionWindow: Number(guard.decisionWindow),
         escalatedWindow: Number(guard.escalatedWindow)
     }

@@ -1,0 +1,305 @@
+[
+  {
+    "actionId": 1,
+    "scenario": "timeout",
+    "trigger": "PriceGap",
+    "status": "Defaulted",
+    "executedBps": 5000,
+    "triggerPrice": "1886999999999999999999",
+    "decisionWindow": 60,
+    "openedAt": 1794914585,
+    "deadline": 1794914645,
+    "resolvedAt": 1794914649,
+    "origin": {
+      "hash": "0x8976b699c61cba18d7e98846c3137628c939198ede9654bea14972225251ddc8",
+      "block": 59963578,
+      "timestamp": 1794914584
+    },
+    "reactive": {
+      "hash": "0xcb68d6694219ad15966b70bca1fe1559adc2635f7da32eeb96759ed2ef7128c8",
+      "block": 8566770,
+      "timestamp": 1794914583
+    },
+    "callback": {
+      "hash": "0x295e5af103a9f19cb39e941dc23e2bfe34b074b9f08f670eea0cfa5ed846d9fb",
+      "block": 59963584,
+      "timestamp": 1794914585
+    },
+    "timeoutDirective": {
+      "hash": "0xa898801f1365e100317a37906d78d607472d88ee7b5528f65f28bf9495580531",
+      "block": 8566831,
+      "timestamp": 1794914648
+    },
+    "recordedAt": "2026-11-17T11:57:35.215Z"
+  },
+  {
+    "actionId": 2,
+    "scenario": "approve",
+    "trigger": "PriceGap",
+    "status": "Approved",
+    "executedBps": 5000,
+    "triggerPrice": "1886999999999999999997",
+    "decisionWindow": 60,
+    "openedAt": 1794972122,
+    "deadline": 1794972182,
+    "resolvedAt": 1794972124,
+    "origin": {
+      "hash": "0x326a98acc910fb63fbb80473f6cb232d7a6a22fc65e7e6b9a2abd9a17d562d29",
+      "block": 60251257,
+      "timestamp": 1794972120
+    },
+    "reactive": {
+      "hash": "0x95c572412afc5789ba8f1ac63ca1ccee4dcaed3a430baf09d41076e3b80a14a6",
+      "block": 8620925,
+      "timestamp": 1794972120
+    },
+    "callback": {
+      "hash": "0x8149f0df5a8e96dedf63dfa97cc6bfa819756d10cecf186b73b9b9f0a2a08cd7",
+      "block": 60251266,
+      "timestamp": 1794972122
+    },
+    "decision": {
+      "hash": "0x911bd7364e9c2d939e3af4d488d51263b6d6df0208a659231f5c34b98233e7c9",
+      "block": 60251276,
+      "timestamp": 1794972124,
+      "kind": "approve"
+    },
+    "recordedAt": "2026-11-18T03:22:24.412Z"
+  },
+  {
+    "actionId": 3,
+    "scenario": "veto",
+    "trigger": "PriceGap",
+    "status": "Vetoed",
+    "executedBps": 0,
+    "triggerPrice": "1886999999999999999999",
+    "decisionWindow": 60,
+    "openedAt": 1794972250,
+    "deadline": 1794972310,
+    "resolvedAt": 1794972253,
+    "origin": {
+      "hash": "0x5b2ee610efd38198718e7eb02b1cd3de3b69d66d60d098de2e68356087ec5734",
+      "block": 60251903,
+      "timestamp": 1794972249
+    },
+    "reactive": {
+      "hash": "0xf8436b51d3aa454b0b57a66ec4f0b3af5b9f951e96767fbef381f77190cfd7db",
+      "block": 8621047,
+      "timestamp": 1794972248
+    },
+    "callback": {
+      "hash": "0x626035b4a248e65752fbd69aa50f7f3bbabc40068472447205ddcb085917b6bb",
+      "block": 60251907,
+      "timestamp": 1794972250
+    },
+    "decision": {
+      "hash": "0x835d48183c2b19da88b8ceea1b31585784ef12f90fddb6d63f21c8cf2d06bc34",
+      "block": 60251923,
+      "timestamp": 1794972253,
+      "kind": "veto"
+    },
+    "recordedAt": "2026-11-18T03:24:33.189Z"
+  },
+  {
+    "actionId": 4,
+    "scenario": "approve",
+    "trigger": "PriceGap",
+    "status": "Approved",
+    "executedBps": 5000,
+    "triggerPrice": "1887000000000000000000",
+    "decisionWindow": 60,
+    "openedAt": 1794972497,
+    "deadline": 1794972557,
+    "resolvedAt": 1794972499,
+    "origin": {
+      "hash": "0x7713f2a17fb3e3e0d67a5d73fc1aae8628c8776b1c7956d8eb4f0857e47cf6bc",
+      "block": 60253135,
+      "timestamp": 1794972495
+    },
+    "reactive": {
+      "hash": "0x1f0e0cd2b70a010f8ba4668103511143e91810e6a6da2b2ff53ebbd365b1e36e",
+      "block": 8621278,
+      "timestamp": 1794972495
+    },
+    "callback": {
+      "hash": "0xb13c5856fd86f66d2b0467f95ff606fd0d9b74b3611bf220c73542f146170df9",
+      "block": 60253144,
+      "timestamp": 1794972497
+    },
+    "decision": {
+      "hash": "0x0eb90b282e436e7362cac059033688d802edc6f76b4d943784aa071fe4c781e1",
+      "block": 60253155,
+      "timestamp": 1794972499,
+      "kind": "approve"
+    },
+    "recordedAt": "2026-11-18T03:28:39.783Z"
+  },
+  {
+    "actionId": 5,
+    "scenario": "veto",
+    "trigger": "PriceGap",
+    "status": "Vetoed",
+    "executedBps": 0,
+    "triggerPrice": "1886999999999999999998",
+    "decisionWindow": 60,
+    "openedAt": 1794972627,
+    "deadline": 1794972687,
+    "resolvedAt": 1794972630,
+    "origin": {
+      "hash": "0x9d57e4867ee07f832c188d3e2a3f4c6ff04a6179972f7bc323307b5737471094",
+      "block": 60253786,
+      "timestamp": 1794972626
+    },
+    "reactive": {
+      "hash": "0x160ed6088eba19c0f98fec2ee907c3d5400e817230ab8071f7b3ad7057500826",
+      "block": 8621399,
+      "timestamp": 1794972625
+    },
+    "callback": {
+      "hash": "0x66acc2a5968f6dc113ded63be1081ba65004d3fcacadf5c305c6b909050e7bce",
+      "block": 60253792,
+      "timestamp": 1794972627
+    },
+    "decision": {
+      "hash": "0x4a010270f15ae89c99a993c23657028ca09a6d4a817dbb2360eea2a0a10bf70d",
+      "block": 60253806,
+      "timestamp": 1794972630,
+      "kind": "veto"
+    },
+    "recordedAt": "2026-11-18T03:30:52.167Z"
+  },
+  {
+    "actionId": 6,
+    "scenario": "timeout",
+    "trigger": "PriceGap",
+    "status": "Defaulted",
+    "executedBps": 5000,
+    "triggerPrice": "1886999999999999999998",
+    "decisionWindow": 60,
+    "openedAt": 1794972758,
+    "deadline": 1794972818,
+    "resolvedAt": 1794972821,
+    "origin": {
+      "hash": "0x90a30f8346acdb07ef63eb93b339cbdfcb3d868c5915ce226809d6f466224b77",
+      "block": 60254439,
+      "timestamp": 1794972756
+    },
+    "reactive": {
+      "hash": "0x8299a2e3af4c55df6dc036ec6b136f713e52abc90f7cd06bc60d40f0eeacb525",
+      "block": 8621522,
+      "timestamp": 1794972756
+    },
+    "callback": {
+      "hash": "0x87c430a7f0ac34ff25aa462cc10eab0939fd2b2e969f4bc94c61713473cb7750",
+      "block": 60254447,
+      "timestamp": 1794972758
+    },
+    "timeoutDirective": {
+      "hash": "0xf1f6b62a617009187ec3a2d69bf98584256a64c316b5e42f93946982486c131b",
+      "block": 8621581,
+      "timestamp": 1794972819
+    },
+    "recordedAt": "2026-11-18T03:34:21.119Z"
+  },
+  {
+    "actionId": 7,
+    "scenario": "recover",
+    "trigger": "PriceGap",
+    "status": "Cancelled",
+    "executedBps": 0,
+    "triggerPrice": "1886999999999999999998",
+    "decisionWindow": 60,
+    "openedAt": 1794972948,
+    "deadline": 1794973008,
+    "resolvedAt": 1794972953,
+    "origin": {
+      "hash": "0x9466d0d59298a815ccc34e964582dbf99b50e84a308ebc1580ad4981c4785235",
+      "block": 60255393,
+      "timestamp": 1794972947
+    },
+    "reactive": {
+      "hash": "0x25d25b253d6976d7e2f13b527bb420f0d55b5d297753810a57a2f63022c86b3d",
+      "block": 8621698,
+      "timestamp": 1794972946
+    },
+    "callback": {
+      "hash": "0x53230075f8863e85414ba810b1d55246f13a85e8e5422bb2c2334ef7652a5059",
+      "block": 60255398,
+      "timestamp": 1794972948
+    },
+    "decision": {
+      "hash": "0xce36d0da62271ff2a8624001799d72e1c7eb156fa76fbc57a0030d9a00b4373e",
+      "block": 60255418,
+      "timestamp": 1794972952,
+      "kind": "recovery buy"
+    },
+    "recordedAt": "2026-11-18T03:36:16.497Z"
+  },
+  {
+    "actionId": 8,
+    "scenario": "timeout",
+    "trigger": "PriceGap",
+    "status": "Defaulted",
+    "executedBps": 5000,
+    "triggerPrice": "1886999999999999999999",
+    "decisionWindow": 60,
+    "openedAt": 1794993051,
+    "deadline": 1794993111,
+    "resolvedAt": 1794993120,
+    "origin": {
+      "hash": "0x72cd178210134eb468e44b1fe627e0a2f3f716461818a17f199fee175859a085",
+      "block": 60355908,
+      "timestamp": 1794993050
+    },
+    "reactive": {
+      "hash": "0x3f4082ab2f79107d9790b3ad3461311aa8a0b87805b71db772509f622146a66b",
+      "block": 8640707,
+      "timestamp": 1794993049
+    },
+    "callback": {
+      "hash": "0x7fecd544f4737c4a26bd07a44880ab34720a94ed50e4075c0b79d2f9325b6601",
+      "block": 60355914,
+      "timestamp": 1794993051
+    },
+    "timeoutDirective": {
+      "hash": "0xba80046aa9801b32bb8267e518b6f2136bce58719bb3dd2d1fcccc505d7dc164",
+      "block": 8640771,
+      "timestamp": 1794993118
+    },
+    "recordedAt": "2026-11-18T09:12:36.844Z"
+  },
+  {
+    "actionId": 9,
+    "scenario": "approve",
+    "trigger": "PriceGap",
+    "status": "Approved",
+    "executedBps": 5000,
+    "triggerPrice": "1886999999999999999998",
+    "decisionWindow": 60,
+    "openedAt": 1795082780,
+    "deadline": 1795082840,
+    "resolvedAt": 1795082782,
+    "origin": {
+      "hash": "0xa7bf2a2a627cf45aa9f77ed2ed7615eb2cee0c0b6ee00aad9840609429756229",
+      "block": 60804549,
+      "timestamp": 1795082778
+    },
+    "reactive": {
+      "hash": "0x0f173a816eb7c863de80304883446c09c341d56db897d826f12e23336e7e95f1",
+      "block": 8725369,
+      "timestamp": 1795082778
+    },
+    "callback": {
+      "hash": "0xf0a78c0843a0d58618d94e8273df05cb1a9d9bacd644cc3909c195e6c0a623ef",
+      "block": 60804557,
+      "timestamp": 1795082780
+    },
+    "decision": {
+      "hash": "0x68c051866cff94ebf6f65faa7fa38505c8f69395bff252932aef4e45a2fce715",
+      "block": 60804569,
+      "timestamp": 1795082782,
+      "kind": "approve"
+    },
+    "recordedAt": "2026-11-19T10:06:42.983Z"
+  }
+]

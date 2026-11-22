@@ -5,21 +5,25 @@ import {
     prime,
     restorePrice,
     sellRisk,
-    topUpVault,
-    ensureFunds
+    topUpVault
 } from './lib/bot.js'
 import {
+    coverDebt,
+    fundGuard,
+    fundReactiveContract,
     readAction,
+    readDebts,
     readGuardState,
     readPool,
     readReactiveState,
     readTokenBalance,
     readVault
 } from './lib/chain.js'
-import { computeHops } from './lib/latency.js'
+import { computeHops, describeEndToEnd, latestPerScenario, toMarkdown } from './lib/latency.js'
 import { ONE, formatPrice, formatTokens, parseTokens } from './lib/market.js'
 import { traceAction } from './lib/trace.js'
-import { appendTrace } from './lib/store.js'
+import { appendTrace, readTraces, writeSubmission } from './lib/store.js'
+import { ensureFunds } from './lib/bot.js'
 
 async function status() {
     const ctx = createContext()
@@ -44,6 +48,20 @@ async function status() {
     console.log('vault risk / stable   ', formatTokens(vault.risk, 4), '/', formatTokens(vault.stable, 2))
     console.log('reactive contract bal ', formatTokens(reactiveBalance, 4))
     console.log('guard balance (eth)   ', formatTokens(guardBalance, 6))
+    const debts = await readDebts(ctx)
+    console.log('reactive debt         ', formatTokens(debts.reactive, 4))
+    console.log('guard debt            ', formatTokens(debts.guard, 6))
+
+    if (reactive.pendingActive && guard.activeActionId === 0) {
+        console.log(
+            '\nThe reactive contract still tracks a pending action that the guard has already closed.'
+        )
+        console.log(
+            'It most likely cannot pay for reactions. Fund it (npm run bot -- fund-reactive <amount>) and, if it owes debt, run npm run bot -- cover-debt reactive. It clears itself on its next tick.\n'
+        )
+    } else if (debts.reactive > 0n) {
+        console.log('\nThe reactive contract owes debt and receives nothing until it is covered: npm run bot -- cover-debt reactive\n')
+    }
 
     if (guard.actionCount > 0) {
         const action = await readAction(ctx, guard.actionCount)
@@ -55,11 +73,15 @@ async function status() {
         )
     }
     if (ctx.account) {
-        const [risk, stable] = await Promise.all([
+        const [risk, stable, reactiveNative, originNative] = await Promise.all([
             readTokenBalance(ctx, ctx.deployment.riskToken, ctx.account.address),
-            readTokenBalance(ctx, ctx.deployment.stableToken, ctx.account.address)
+            readTokenBalance(ctx, ctx.deployment.stableToken, ctx.account.address),
+            ctx.reactive.getBalance({ address: ctx.account.address }),
+            ctx.origin.getBalance({ address: ctx.account.address })
         ])
         console.log('wallet risk / stable  ', formatTokens(risk, 2), '/', formatTokens(stable, 2))
+        console.log('wallet reactive chain ', formatTokens(reactiveNative, 4))
+        console.log('wallet origin (eth)   ', formatTokens(originNative, 6))
     }
 }
 
@@ -102,8 +124,30 @@ async function bot(args: string[]) {
             console.log('vault topped up with', formatTokens(added, 2))
             return
         }
+        case 'fund-reactive': {
+            const amount = parseTokens(value ?? '')
+            if (amount <= 0n) throw new Error('usage: bot fund-reactive <amount>, for example 0.3')
+            const hash = await fundReactiveContract(ctx, amount)
+            console.log('sent', formatTokens(amount, 4), 'to the reactive contract', hash)
+            return
+        }
+        case 'fund-guard': {
+            const amount = parseTokens(value ?? '')
+            if (amount <= 0n) throw new Error('usage: bot fund-guard <amount>, for example 0.001')
+            const hash = await fundGuard(ctx, amount)
+            console.log('sent', formatTokens(amount, 6), 'to the guard', hash)
+            return
+        }
+        case 'cover-debt': {
+            if (value !== 'reactive' && value !== 'guard') throw new Error('usage: bot cover-debt reactive|guard')
+            const hash = await coverDebt(ctx, value)
+            console.log('debt covered', hash)
+            return
+        }
         default:
-            console.log('bot commands: funds | prime | sell <risk> | buy <stable> | restore [price] | topup [risk]')
+            console.log(
+                'bot commands: funds | prime | sell <risk> | buy <stable> | restore [price] | topup [risk] | fund-reactive <amount> | fund-guard <amount> | cover-debt reactive|guard'
+            )
     }
 }
 
@@ -117,17 +161,34 @@ async function trace(args: string[]) {
     console.log(computeHops(result))
 }
 
+async function report() {
+    const all = readTraces()
+    if (all.length === 0) throw new Error('no traces recorded yet, run the demo or trace first')
+    const picked = latestPerScenario(all)
+    const explorer = process.env.VITE_EXPLORER ?? 'https://sepolia.basescan.org'
+    const parts = [toMarkdown(picked, undefined, explorer)]
+    const overall = describeEndToEnd(all)
+    if (overall && all.length !== picked.length) {
+        parts.push(`All ${all.length} recorded actions. ${overall}`)
+    }
+    const markdown = parts.join('\n\n')
+    const file = writeSubmission(markdown)
+    console.log(markdown)
+    console.log(`\nsaved to ${file}`)
+}
+
 const [command = 'help', ...rest] = process.argv.slice(2)
 
 const commands: Record<string, () => Promise<void>> = {
     status,
     bot: () => bot(rest),
-    trace: () => trace(rest)
+    trace: () => trace(rest),
+    report
 }
 
 const run = commands[command]
 if (!run) {
-    console.log('commands: status | bot <...> | trace <actionId> [scenario]')
+    console.log('commands: status | bot <...> | trace <actionId> [scenario] | report')
     process.exit(command === 'help' ? 0 : 1)
 }
 
